@@ -4,7 +4,7 @@
 /.cargo-online/
 /.dotnet-cache/
 /output/
-/references/
+/msexcel-builder/
 /docs/IMPLEMENTATION_PLAN.md
 /docs/IMPLEMENTATION_STATUS.md
 **/bin/

@@ -16,6 +16,10 @@ pub fn schema_json() -> String {
     core::request_schema().to_string()
 }
 #[napi]
+pub fn capabilities_json() -> String {
+    serde_json::to_string(&core::ExcelExporter::capabilities()).unwrap()
+}
+#[napi]
 pub async fn export_json(json: String) -> Result<String> {
     let report = core::ExcelExporter::export(core::parse_request(&json).map_err(error)?)
         .await
@@ -25,6 +29,7 @@ pub async fn export_json(json: String) -> Result<String> {
 #[napi]
 pub struct ExportJob {
     inner: core::ExportJob,
+    progress: Arc<tokio_mutex::Mutex<napi::tokio::sync::watch::Receiver<core::JobStatus>>>,
 }
 #[napi]
 impl ExportJob {
@@ -37,16 +42,68 @@ impl ExportJob {
         serde_json::to_string(&self.inner.status()).unwrap()
     }
     #[napi]
+    pub async fn next_event_json(&self) -> Result<Option<String>> {
+        let mut rx = self
+            .progress
+            .try_lock()
+            .map_err(|_| napi::Error::from_reason("Concurrent event reads are unsupported"))?;
+        let current = rx.borrow_and_update().clone();
+        if matches!(current.phase.as_str(), "succeeded" | "failed" | "cancelled")
+            && self.inner.try_result().is_some()
+        {
+            return Ok(None);
+        }
+        let _ = rx.changed().await;
+        Ok(Some(
+            serde_json::to_string(&rx.borrow_and_update().clone()).unwrap(),
+        ))
+    }
+    #[napi]
     pub async fn result_json(&self) -> Result<String> {
         Ok(serde_json::to_string(&self.inner.result().await.map_err(error)?).unwrap())
     }
 }
 #[napi]
 pub async fn start_export_json(json: String) -> Result<ExportJob> {
-    Ok(ExportJob {
-        inner: core::ExcelExporter::start(core::parse_request(&json).map_err(error)?)
-            .map_err(error)?,
-    })
+    let inner =
+        core::ExcelExporter::start(core::parse_request(&json).map_err(error)?).map_err(error)?;
+    let progress = Arc::new(tokio_mutex::Mutex::new(inner.subscribe_progress()));
+    Ok(ExportJob { inner, progress })
+}
+#[napi]
+pub struct InputStream {
+    id: String,
+}
+#[napi]
+impl InputStream {
+    #[napi]
+    pub fn input_id(&self) -> String {
+        self.id.clone()
+    }
+    #[napi]
+    pub async fn write_batch_json(&self, json: String) -> Result<()> {
+        core::InputService::write_batch_json(&self.id, &json)
+            .await
+            .map_err(error)
+    }
+    #[napi]
+    pub fn finish(&self) -> Result<()> {
+        core::InputService::finish(&self.id).map_err(error)
+    }
+    #[napi]
+    pub fn close(&self) {
+        let _ = core::InputService::release(&self.id);
+    }
+}
+#[napi]
+pub fn open_input_json(json: Option<String>) -> Result<InputStream> {
+    let options: core::InputOptions = match json {
+        Some(s) if !s.trim().is_empty() => serde_json::from_str(&s)
+            .map_err(|_| napi::Error::from_reason("Invalid input options JSON"))?,
+        _ => core::InputOptions::default(),
+    };
+    let id = core::InputService::open(options).map_err(error)?;
+    Ok(InputStream { id })
 }
 #[napi]
 pub struct QueryStream {

@@ -18,7 +18,25 @@ test('native addon exports two independent workbooks', async () => {
   } finally { fs.rmSync(dir, {recursive:true,force:true}); }
 });
 test('native validation rejects unknown properties', () => assert.throws(() => excel.validate({workbooks:[],typo:true})));
-test('schema is exposed by native library', () => assert.equal(excel.schema().title,'ExportRequest'));
+test('schema and capabilities are exposed by native library', () => {
+  assert.equal(excel.schema().title,'ExportRequest');
+  const caps = excel.capabilities();
+  assert.equal(caps.abiVersion, 1);
+  assert.ok(caps.sourceKinds.includes('rowStream'));
+  assert.ok(caps.overflowPolicies.includes('splitWorksheet'));
+});
+test('dynamic report headers are accepted by the native addon', async () => {
+  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'native-excel-header-'));
+  try {
+    const request=JSON.parse(fs.readFileSync('examples/configs/report-header.json','utf8'));
+    request.workbooks[0].output.path=path.join(dir,'report.xlsx');
+    excel.validate(request);
+    const report=await excel.exportWorkbooks(request);
+    assert.equal(report.workbooks[0].rows,2);
+    request.workbooks[0].worksheets[0].reportHeader.columnCount=9;
+    assert.throws(()=>excel.validate(request),/columnCount/);
+  } finally {fs.rmSync(dir,{recursive:true,force:true});}
+});
 test('native libraries enable file telemetry only with explicit absolute destinations', async () => {
   const dir=fs.mkdtempSync(path.join(os.tmpdir(),'native-excel-telemetry-'));
   try {
@@ -41,4 +59,39 @@ test('typed report total is validated before creating output', () => {
 });
 test('invalid query options reject before connecting', async () => {
   await assert.rejects(excel.queryStream({dbms:'postgresql',connectionString:'',query:'SELECT 1',options:{queueRows:0}}), /INVALID_CONFIG/);
+});
+test('incremental caller input stream and worksheet overflow splitting work in Node', async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'native-excel-input-'));
+  const input = excel.openInputStream({ queueRows: 2 });
+  try {
+    const outPath = path.join(dir, 'streamed.xlsx');
+    const jobPromise = excel.startExport({
+      options: { maxRows: 3 },
+      workbooks: [{
+        id: 'streamed',
+        output: { path: outPath },
+        worksheets: [{
+          name: 'Orders',
+          source: { kind: 'rowStream', inputId: input.inputId },
+          columns: [
+            { field: 'id', dataType: 'integer' },
+            { field: 'amount', dataType: 'number' }
+          ],
+          overflow: { policy: 'splitWorksheet', namePattern: 'Orders_{index}' },
+          rules: [{ when: { field: 'amount', op: 'gt', value: 100 }, format: { bold: true } }]
+        }]
+      }]
+    });
+    const job = await jobPromise;
+    await input.writeBatch([{ id: 1, amount: 50 }, { id: 2, amount: 150 }]);
+    await input.writeBatch([{ id: 3, amount: 250 }]);
+    input.finish();
+    const report = await job.result();
+    assert.equal(report.workbooks[0].rows, 3);
+    assert.equal(report.workbooks[0].sheetsCompleted, 2);
+    assert.ok(fs.statSync(outPath).size > 1000);
+  } finally {
+    input.close();
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
 });

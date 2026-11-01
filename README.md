@@ -1,5 +1,7 @@
 # NativeExcelTool
 
+Reports can include [dynamic merged titles and metadata headers](docs/guides/report-headers.md). See the [complete report-header example](examples/configs/report-header.json).
+
 Progress and opt-in telemetry are documented in [the telemetry guide](docs/guides/telemetry.md). The [remaining implementation plan](docs/REMAINING_PLAN.md) records the concrete closure steps and acceptance gates.
 
 Native Rust library for creating Excel `.xlsx` reports from object records and incrementally consumed PostgreSQL or SQL Server queries. It also builds a Node-API addon and a native DLL for C# P/Invoke.

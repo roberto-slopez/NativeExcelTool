@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "workbooks": [{
+    "id": "sales-report",
+    "output": { "path": "output/sales-report.xlsx", "createParents": true, "overwrite": true },
+    "worksheets": [{
+      "name": "Sales",
+      "totalRows": 2,
+      "table": { "name": "SalesData" },
+      "reportHeader": {
+        "title": { "text": "Sales Report", "height": 36, "style": { "fontSize": 24, "fontColor": "#16324F" } },
+        "columnCount": 2,
+        "labelHeight": 20,
+        "valueHeight": 24,
+        "labelStyle": { "fontColor": "#555555" },
+        "valueStyle": { "fontSize": 12 },
+        "columns": [
+          { "fields": [
+            { "label": "Date", "value": "2026-11-01", "dataType": "date", "numberFormat": "dd/mm/yyyy" },
+            { "label": "Prepared by", "value": "Reporting Team" }
+          ] },
+          { "fields": [
+            { "label": "Module", "value": "Sales" },
+            { "label": "Currency", "value": "USD" }
+          ] }
+        ]
+      },
+      "layout": { "headerStyle": "tableHeading", "freezeRows": 1 },
+      "styles": { "tableHeading": { "bold": true, "background": "#16324F", "fontColor": "#FFFFFF" } },
+      "source": { "kind": "objects", "records": [
+        { "invoice": "INV-001", "date": "2026-10-31", "customer": "Contoso", "product": "Service A", "quantity": 2, "unitPrice": 50, "amount": 100, "paid": true },
+        { "invoice": "INV-002", "date": "2026-11-01", "customer": "Northwind", "product": "Service B", "quantity": 1, "unitPrice": 99.95, "amount": 99.95, "paid": false }
+      ] },
+      "columns": [
+        { "field": "invoice", "dataType": "text", "width": 18 },
+        { "field": "date", "dataType": "date", "format": "dd/mm/yyyy", "width": 16 },
+        { "field": "customer", "dataType": "text", "width": 24 },
+        { "field": "product", "dataType": "text", "width": 24 },
+        { "field": "quantity", "dataType": "integer", "width": 12 },
+        { "field": "unitPrice", "dataType": "number", "format": "\"$\"#,##0.00", "width": 16 },
+        { "field": "amount", "dataType": "number", "format": "\"$\"#,##0.00", "width": 16 },
+        { "field": "paid", "dataType": "boolean", "width": 12 }
+      ]
+    }]
+  }]
+}

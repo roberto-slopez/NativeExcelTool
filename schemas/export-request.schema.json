@@ -1,11 +1,70 @@
 {
   "$defs": {
+    "BinaryEncoding": {
+      "enum": [
+        "hex",
+        "base64"
+      ],
+      "type": "string"
+    },
+    "CellStyleOverride": {
+      "additionalProperties": false,
+      "properties": {
+        "field": {
+          "description": "Column `field` name.",
+          "type": "string"
+        },
+        "format": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Style"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "row": {
+          "description": "1-based data record index (1 = first data row).",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "style": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "row",
+        "field"
+      ],
+      "type": "object"
+    },
     "Column": {
       "additionalProperties": false,
       "properties": {
+        "binaryEncoding": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BinaryEncoding"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
         "dataType": {
           "$ref": "#/$defs/DataType",
           "default": "auto"
+        },
+        "defaultValue": {
+          "default": null
         },
         "field": {
           "type": "string"
@@ -32,10 +91,40 @@
           "default": false,
           "type": "boolean"
         },
+        "nullPlaceholder": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "numberFormat": {
           "default": null,
           "type": [
             "string",
+            "null"
+          ]
+        },
+        "path": {
+          "default": null,
+          "items": {
+            "type": "string"
+          },
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "precisionPolicy": {
+          "$ref": "#/$defs/PrecisionPolicy",
+          "default": "exactText"
+        },
+        "roundScale": {
+          "default": null,
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
             "null"
           ]
         },
@@ -45,6 +134,20 @@
             "string",
             "null"
           ]
+        },
+        "timezone": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "transforms": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/ColumnTransform"
+          },
+          "type": "array"
         },
         "width": {
           "default": null,
@@ -70,6 +173,27 @@
         }
       ]
     },
+    "ColumnTransform": {
+      "enum": [
+        "trim",
+        "uppercase",
+        "lowercase"
+      ],
+      "type": "string"
+    },
+    "ComparisonOp": {
+      "enum": [
+        "eq",
+        "ne",
+        "gt",
+        "gte",
+        "lt",
+        "lte",
+        "isNull",
+        "notNull"
+      ],
+      "type": "string"
+    },
     "DataType": {
       "enum": [
         "auto",
@@ -81,7 +205,8 @@
         "date",
         "datetime",
         "time",
-        "formula"
+        "formula",
+        "binary"
       ],
       "type": "string"
     },
@@ -91,6 +216,61 @@
         "sqlserver"
       ],
       "type": "string"
+    },
+    "ExportDefaults": {
+      "additionalProperties": false,
+      "properties": {
+        "autofilter": {
+          "default": null,
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "bodyStyle": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "freezeRows": {
+          "default": null,
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "headerStyle": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "rowHeight": {
+          "default": null,
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "writerMode": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/WriterMode"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "type": "object"
     },
     "ExportOptions": {
       "additionalProperties": false,
@@ -105,6 +285,21 @@
         "continueOnError": {
           "default": false,
           "type": "boolean"
+        },
+        "exportTimeoutMs": {
+          "default": null,
+          "format": "uint64",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "maxOutputBytes": {
+          "default": 67108864,
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
         },
         "maxRows": {
           "default": 1048576,
@@ -154,6 +349,127 @@
       },
       "type": "object"
     },
+    "ExtraFieldPolicy": {
+      "enum": [
+        "ignore",
+        "error"
+      ],
+      "type": "string"
+    },
+    "HeaderColumn": {
+      "additionalProperties": false,
+      "properties": {
+        "fields": {
+          "items": {
+            "$ref": "#/$defs/HeaderField"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "fields"
+      ],
+      "type": "object"
+    },
+    "HeaderField": {
+      "additionalProperties": false,
+      "properties": {
+        "dataType": {
+          "$ref": "#/$defs/DataType",
+          "default": "auto"
+        },
+        "label": {
+          "type": "string"
+        },
+        "labelStyle": {
+          "$ref": "#/$defs/Style",
+          "default": {
+            "background": null,
+            "bold": null,
+            "border": null,
+            "borderBottom": null,
+            "borderBottomColor": null,
+            "borderColor": null,
+            "borderDiagonal": null,
+            "borderDiagonalColor": null,
+            "borderLeft": null,
+            "borderLeftColor": null,
+            "borderRight": null,
+            "borderRightColor": null,
+            "borderTop": null,
+            "borderTopColor": null,
+            "fillPattern": null,
+            "fontColor": null,
+            "fontName": null,
+            "fontSize": null,
+            "foregroundColor": null,
+            "hidden": null,
+            "horizontal": null,
+            "indent": null,
+            "italic": null,
+            "locked": null,
+            "numberFormat": null,
+            "resetFields": [],
+            "rotation": null,
+            "shrinkToFit": null,
+            "strikeout": null,
+            "underline": null,
+            "vertical": null,
+            "wrap": null
+          }
+        },
+        "numberFormat": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "value": true,
+        "valueStyle": {
+          "$ref": "#/$defs/Style",
+          "default": {
+            "background": null,
+            "bold": null,
+            "border": null,
+            "borderBottom": null,
+            "borderBottomColor": null,
+            "borderColor": null,
+            "borderDiagonal": null,
+            "borderDiagonalColor": null,
+            "borderLeft": null,
+            "borderLeftColor": null,
+            "borderRight": null,
+            "borderRightColor": null,
+            "borderTop": null,
+            "borderTopColor": null,
+            "fillPattern": null,
+            "fontColor": null,
+            "fontName": null,
+            "fontSize": null,
+            "foregroundColor": null,
+            "hidden": null,
+            "horizontal": null,
+            "indent": null,
+            "italic": null,
+            "locked": null,
+            "numberFormat": null,
+            "resetFields": [],
+            "rotation": null,
+            "shrinkToFit": null,
+            "strikeout": null,
+            "underline": null,
+            "vertical": null,
+            "wrap": null
+          }
+        }
+      },
+      "required": [
+        "label",
+        "value"
+      ],
+      "type": "object"
+    },
     "Int64Input": {
       "anyOf": [
         {
@@ -172,11 +488,38 @@
           "default": false,
           "type": "boolean"
         },
+        "autofit": {
+          "default": false,
+          "type": "boolean"
+        },
+        "autofitSampleRows": {
+          "default": null,
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "freezeColumns": {
+          "default": 0,
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
         "freezeRows": {
           "default": 1,
           "format": "uint32",
           "minimum": 0,
           "type": "integer"
+        },
+        "gridlines": {
+          "default": null,
+          "type": [
+            "boolean",
+            "null"
+          ]
         },
         "header": {
           "default": true,
@@ -189,12 +532,46 @@
             "null"
           ]
         },
+        "hiddenColumns": {
+          "default": [],
+          "items": {
+            "format": "uint16",
+            "maximum": 65535,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "type": "array"
+        },
+        "hiddenRows": {
+          "default": [],
+          "items": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "type": "array"
+        },
         "merges": {
           "default": [],
           "items": {
             "$ref": "#/$defs/Merge"
           },
           "type": "array"
+        },
+        "print": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PrintOptions"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "protectSheet": {
+          "default": false,
+          "type": "boolean"
         },
         "rowHeight": {
           "default": null,
@@ -203,6 +580,17 @@
             "number",
             "null"
           ]
+        },
+        "rowHeights": {
+          "additionalProperties": false,
+          "default": {},
+          "patternProperties": {
+            "^\\d+$": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          "type": "object"
         },
         "startColumn": {
           "default": 1,
@@ -216,6 +604,23 @@
           "format": "uint32",
           "minimum": 0,
           "type": "integer"
+        },
+        "tabColor": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "zoom": {
+          "default": null,
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
         }
       },
       "type": "object"
@@ -278,11 +683,86 @@
         },
         "path": {
           "type": "string"
+        },
+        "returnBytes": {
+          "default": false,
+          "type": "boolean"
+        },
+        "syncData": {
+          "default": false,
+          "type": "boolean"
         }
       },
       "required": [
         "path"
       ],
+      "type": "object"
+    },
+    "OverflowPolicy": {
+      "enum": [
+        "error",
+        "splitWorksheet",
+        "splitWorkbook"
+      ],
+      "type": "string"
+    },
+    "OverflowSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "maxSplits": {
+          "default": 256,
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "namePattern": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "policy": {
+          "$ref": "#/$defs/OverflowPolicy",
+          "default": "error"
+        }
+      },
+      "type": "object"
+    },
+    "PageMargins": {
+      "additionalProperties": false,
+      "properties": {
+        "bottom": {
+          "default": 0.0,
+          "format": "double",
+          "type": "number"
+        },
+        "footer": {
+          "default": 0.0,
+          "format": "double",
+          "type": "number"
+        },
+        "header": {
+          "default": 0.0,
+          "format": "double",
+          "type": "number"
+        },
+        "left": {
+          "default": 0.0,
+          "format": "double",
+          "type": "number"
+        },
+        "right": {
+          "default": 0.0,
+          "format": "double",
+          "type": "number"
+        },
+        "top": {
+          "default": 0.0,
+          "format": "double",
+          "type": "number"
+        }
+      },
       "type": "object"
     },
     "Parameter": {
@@ -390,6 +870,96 @@
         }
       ]
     },
+    "PrecisionPolicy": {
+      "enum": [
+        "exactText",
+        "numeric",
+        "round"
+      ],
+      "type": "string"
+    },
+    "PrintOptions": {
+      "additionalProperties": false,
+      "properties": {
+        "fitToHeight": {
+          "default": null,
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "fitToWidth": {
+          "default": null,
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "footer": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "header": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "landscape": {
+          "default": null,
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "margins": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PageMargins"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "paperSize": {
+          "default": null,
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "repeatRows": {
+          "default": null,
+          "items": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": [
+            "array",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
     "QueryOptions": {
       "additionalProperties": false,
       "properties": {
@@ -426,6 +996,269 @@
           "format": "uint",
           "minimum": 0,
           "type": "integer"
+        }
+      },
+      "type": "object"
+    },
+    "ReportHeader": {
+      "additionalProperties": false,
+      "properties": {
+        "columnCount": {
+          "default": null,
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "columns": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/HeaderColumn"
+          },
+          "type": "array"
+        },
+        "gapRows": {
+          "default": 0,
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "labelHeight": {
+          "default": null,
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "labelStyle": {
+          "$ref": "#/$defs/Style",
+          "default": {
+            "background": null,
+            "bold": null,
+            "border": null,
+            "borderBottom": null,
+            "borderBottomColor": null,
+            "borderColor": null,
+            "borderDiagonal": null,
+            "borderDiagonalColor": null,
+            "borderLeft": null,
+            "borderLeftColor": null,
+            "borderRight": null,
+            "borderRightColor": null,
+            "borderTop": null,
+            "borderTopColor": null,
+            "fillPattern": null,
+            "fontColor": null,
+            "fontName": null,
+            "fontSize": null,
+            "foregroundColor": null,
+            "hidden": null,
+            "horizontal": null,
+            "indent": null,
+            "italic": null,
+            "locked": null,
+            "numberFormat": null,
+            "resetFields": [],
+            "rotation": null,
+            "shrinkToFit": null,
+            "strikeout": null,
+            "underline": null,
+            "vertical": null,
+            "wrap": null
+          }
+        },
+        "title": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ReportTitle"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "valueHeight": {
+          "default": null,
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "valueStyle": {
+          "$ref": "#/$defs/Style",
+          "default": {
+            "background": null,
+            "bold": null,
+            "border": null,
+            "borderBottom": null,
+            "borderBottomColor": null,
+            "borderColor": null,
+            "borderDiagonal": null,
+            "borderDiagonalColor": null,
+            "borderLeft": null,
+            "borderLeftColor": null,
+            "borderRight": null,
+            "borderRightColor": null,
+            "borderTop": null,
+            "borderTopColor": null,
+            "fillPattern": null,
+            "fontColor": null,
+            "fontName": null,
+            "fontSize": null,
+            "foregroundColor": null,
+            "hidden": null,
+            "horizontal": null,
+            "indent": null,
+            "italic": null,
+            "locked": null,
+            "numberFormat": null,
+            "resetFields": [],
+            "rotation": null,
+            "shrinkToFit": null,
+            "strikeout": null,
+            "underline": null,
+            "vertical": null,
+            "wrap": null
+          }
+        }
+      },
+      "type": "object"
+    },
+    "ReportTitle": {
+      "additionalProperties": false,
+      "properties": {
+        "height": {
+          "default": null,
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "style": {
+          "$ref": "#/$defs/Style",
+          "default": {
+            "background": null,
+            "bold": null,
+            "border": null,
+            "borderBottom": null,
+            "borderBottomColor": null,
+            "borderColor": null,
+            "borderDiagonal": null,
+            "borderDiagonalColor": null,
+            "borderLeft": null,
+            "borderLeftColor": null,
+            "borderRight": null,
+            "borderRightColor": null,
+            "borderTop": null,
+            "borderTopColor": null,
+            "fillPattern": null,
+            "fontColor": null,
+            "fontName": null,
+            "fontSize": null,
+            "foregroundColor": null,
+            "hidden": null,
+            "horizontal": null,
+            "indent": null,
+            "italic": null,
+            "locked": null,
+            "numberFormat": null,
+            "resetFields": [],
+            "rotation": null,
+            "shrinkToFit": null,
+            "strikeout": null,
+            "underline": null,
+            "vertical": null,
+            "wrap": null
+          }
+        },
+        "text": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "text"
+      ],
+      "type": "object"
+    },
+    "RowParity": {
+      "enum": [
+        "odd",
+        "even"
+      ],
+      "type": "string"
+    },
+    "RuleCondition": {
+      "additionalProperties": false,
+      "properties": {
+        "all": {
+          "default": null,
+          "items": {
+            "$ref": "#/$defs/RuleCondition"
+          },
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "any": {
+          "default": null,
+          "items": {
+            "$ref": "#/$defs/RuleCondition"
+          },
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "field": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "not": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RuleCondition"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "op": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ComparisonOp"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "rowParity": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RowParity"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "value": {
+          "default": null
         }
       },
       "type": "object"
@@ -495,6 +1328,23 @@
             "query"
           ],
           "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "inputId": {
+              "type": "string"
+            },
+            "kind": {
+              "const": "rowStream",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "inputId"
+          ],
+          "type": "object"
         }
       ]
     },
@@ -522,7 +1372,84 @@
             "null"
           ]
         },
+        "borderBottom": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "borderBottomColor": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "borderColor": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "borderDiagonal": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "borderDiagonalColor": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "borderLeft": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "borderLeftColor": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "borderRight": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "borderRightColor": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "borderTop": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "borderTopColor": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "fillPattern": {
           "default": null,
           "type": [
             "string",
@@ -551,10 +1478,34 @@
             "null"
           ]
         },
+        "foregroundColor": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "hidden": {
+          "default": null,
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
         "horizontal": {
           "default": null,
           "type": [
             "string",
+            "null"
+          ]
+        },
+        "indent": {
+          "default": null,
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0,
+          "type": [
+            "integer",
             "null"
           ]
         },
@@ -579,6 +1530,13 @@
             "null"
           ]
         },
+        "resetFields": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
         "rotation": {
           "default": null,
           "format": "int16",
@@ -586,6 +1544,13 @@
           "minimum": -32768,
           "type": [
             "integer",
+            "null"
+          ]
+        },
+        "shrinkToFit": {
+          "default": null,
+          "type": [
+            "boolean",
             "null"
           ]
         },
@@ -618,6 +1583,43 @@
           ]
         }
       },
+      "type": "object"
+    },
+    "StyleRule": {
+      "additionalProperties": false,
+      "properties": {
+        "field": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "format": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Style"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "style": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "when": {
+          "$ref": "#/$defs/RuleCondition"
+        }
+      },
+      "required": [
+        "when"
+      ],
       "type": "object"
     },
     "TableSpec": {
@@ -664,11 +1666,95 @@
       },
       "type": "object"
     },
+    "WorkbookMetadata": {
+      "additionalProperties": false,
+      "properties": {
+        "author": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "category": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "comments": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "company": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "keywords": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "manager": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "subject": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "title": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
     "WorkbookSpec": {
       "additionalProperties": false,
       "properties": {
+        "defaults": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ExportDefaults"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
         "id": {
           "type": "string"
+        },
+        "metadata": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/WorkbookMetadata"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         },
         "output": {
           "$ref": "#/$defs/Output"
@@ -704,27 +1790,84 @@
             "null"
           ]
         },
+        "caseInsensitiveFields": {
+          "default": false,
+          "type": "boolean"
+        },
+        "cellOverrides": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/CellStyleOverride"
+          },
+          "type": "array"
+        },
         "columns": {
+          "default": [],
           "items": {
             "$ref": "#/$defs/Column"
           },
           "type": "array"
         },
+        "extraFields": {
+          "$ref": "#/$defs/ExtraFieldPolicy",
+          "default": "ignore"
+        },
+        "inferColumns": {
+          "default": false,
+          "type": "boolean"
+        },
         "layout": {
           "$ref": "#/$defs/Layout",
           "default": {
             "autofilter": false,
+            "autofit": false,
+            "autofitSampleRows": null,
+            "freezeColumns": 0,
             "freezeRows": 1,
+            "gridlines": null,
             "header": true,
             "headerStyle": null,
+            "hiddenColumns": [],
+            "hiddenRows": [],
             "merges": [],
+            "print": null,
+            "protectSheet": false,
             "rowHeight": null,
+            "rowHeights": {},
             "startColumn": 1,
-            "startRow": 1
+            "startRow": 1,
+            "tabColor": null,
+            "zoom": null
           }
         },
         "name": {
           "type": "string"
+        },
+        "overflow": {
+          "$ref": "#/$defs/OverflowSpec",
+          "default": {
+            "maxSplits": 256,
+            "namePattern": null,
+            "policy": "error"
+          }
+        },
+        "reportHeader": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ReportHeader"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "rules": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/StyleRule"
+          },
+          "type": "array"
         },
         "source": {
           "$ref": "#/$defs/Source"
@@ -763,8 +1906,7 @@
       },
       "required": [
         "name",
-        "source",
-        "columns"
+        "source"
       ],
       "type": "object"
     },
@@ -780,11 +1922,24 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
   "properties": {
+    "defaults": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ExportDefaults"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
     "options": {
       "$ref": "#/$defs/ExportOptions",
       "default": {
         "compression": 6,
         "continueOnError": false,
+        "exportTimeoutMs": null,
+        "maxOutputBytes": 67108864,
         "maxRows": 1048576,
         "maxSheets": 256,
         "maxStyles": 10000,

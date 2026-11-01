@@ -105,6 +105,7 @@ async fn text_is_not_a_formula_and_columns_extend_beyond_z() {
             style: None,
             format: None,
             missing_as_null: false,
+            ..Default::default()
         })
         .collect();
     ExcelExporter::export(request).await.unwrap();
