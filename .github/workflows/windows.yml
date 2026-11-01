@@ -1,0 +1,22 @@
+name: Windows validation
+on: [push, pull_request]
+jobs:
+  native:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - run: cargo fmt --all -- --check
+      - run: cargo clippy --workspace --all-targets -- -D warnings
+      - run: cargo test -p native-excel -p native-excel-ffi --tests
+      - run: cargo xtask build-all
+      - run: node --test tests/node.test.cjs
+      - run: dotnet run --project examples/dotnet

@@ -1,0 +1,12 @@
+/target/
+/dist/
+/.cargo-cache/
+/.cargo-online/
+/.dotnet-cache/
+/output/
+/references/
+/docs/IMPLEMENTATION_PLAN.md
+/docs/IMPLEMENTATION_STATUS.md
+**/bin/
+**/obj/
+*.xlsx

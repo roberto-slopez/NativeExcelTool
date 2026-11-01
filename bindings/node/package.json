@@ -1,0 +1,12 @@
+{
+  "name": "native-excel-tool",
+  "version": "0.1.0",
+  "description": "Rust-native Excel exports and database row streams",
+  "main": "index.cjs",
+  "types": "index.d.ts",
+  "license": "MIT",
+  "os": ["win32"],
+  "cpu": ["x64"],
+  "engines": { "node": ">=20" },
+  "files": ["index.cjs", "index.d.ts", "native_excel.node", "export-request.schema.json", "LICENSE", "THIRD_PARTY_NOTICES.md", "licenses"]
+}

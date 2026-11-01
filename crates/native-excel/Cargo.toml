@@ -1,0 +1,27 @@
+[package]
+name = "native-excel"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+tokio.workspace = true
+rust_xlsxwriter = { version = "0.92", features = ["constant_memory", "chrono"] }
+tokio-postgres = { version = "0.7", features = ["with-chrono-0_4", "with-uuid-1", "with-serde_json-1"] }
+tokio-postgres-rustls = "0.13"
+rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"] }
+webpki-roots = "1"
+tiberius = { version = "0.12", default-features = false, features = ["tds73", "rustls", "chrono", "rust_decimal"] }
+tokio-util = { version = "0.7", features = ["compat", "rt"] }
+futures-util = "0.3"
+chrono = { version = "0.4", features = ["serde"] }
+uuid = "1"
+rust_decimal = { version = "1", features = ["db-tokio-postgres"] }
+tempfile = "3"
+schemars = { version = "1", features = ["derive"] }
+
+[dev-dependencies]
+calamine = "0.31"
+zip = { version = "7", default-features = false, features = ["deflate"] }

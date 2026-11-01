@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "styles": {
+    "body": { "fontName": "Calibri", "fontSize": 11, "border": "thin", "borderColor": "#DDDDDD" },
+    "heading": { "bold": true, "background": "#16324F", "fontColor": "#FFFFFF" }
+  },
+  "workbooks": [{
+    "id": "typed-report",
+    "output": { "path": "output/typed-report.xlsx", "createParents": true, "overwrite": true },
+    "worksheets": [{
+      "name": "Invoices",
+      "writerMode": "buffered",
+      "totalRows": 2,
+      "bodyStyle": "body",
+      "table": { "name": "InvoiceData", "maxCells": 10000 },
+      "layout": { "headerStyle": "heading", "freezeRows": 1 },
+      "source": { "kind": "objects", "records": [
+        { "invoice": "INV-001", "date": "2026-10-31", "amount": 1250.5, "tax": 0.16, "paid": true },
+        { "invoice": "INV-002", "date": "2026-11-01", "amount": 99.95, "tax": 0.16, "paid": false }
+      ] },
+      "columns": [
+        { "field": "invoice", "header": "Invoice", "dataType": "text", "width": 18 },
+        { "field": "date", "header": "Date", "dataType": "date", "format": "dd/mm/yyyy", "width": 16 },
+        { "field": "amount", "header": "Amount", "dataType": "number", "numberFormat": "\"$\"#,##0.00", "width": 18 },
+        { "field": "tax", "header": "Tax rate", "dataType": "number", "format": "0.00%" },
+        { "field": "paid", "header": "Paid", "dataType": "boolean" }
+      ]
+    }]
+  }]
+}

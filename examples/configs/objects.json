@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "styles": {
+    "heading": { "bold": true, "fontColor": "#FFFFFF", "background": "#16324F", "wrap": true },
+    "money": { "numberFormat": "#,##0.00", "border": "thin", "borderColor": "#DDDDDD" }
+  },
+  "workbooks": [
+    {
+      "id": "sales", "output": { "path": "output/sales.xlsx", "overwrite": true, "createParents": true },
+      "worksheets": [{
+        "name": "Orders",
+        "source": { "kind": "objects", "records": [
+          { "id": { "$type": "int64", "value": "9007199254740993" }, "customer": "Northwind", "total": 1250.5 },
+          { "id": "ORD-002", "customer": "Contoso", "total": 99.95 }
+        ] },
+        "columns": [{ "field": "id", "width": 24 }, { "field": "customer", "header": "Customer", "width": 30 }, { "field": "total", "style": "money" }],
+        "layout": { "headerStyle": "heading", "freezeRows": 1, "autofilter": true }
+      }]
+    },
+    {
+      "id": "inventory", "output": { "path": "output/inventory.xlsx", "overwrite": true, "createParents": true },
+      "worksheets": [{ "name": "Stock", "source": { "kind": "objects", "records": [{ "sku": "ABC", "quantity": 12 }] }, "columns": [{ "field": "sku" }, { "field": "quantity" }] }]
+    }
+  ]
+}

@@ -1,0 +1,780 @@
+{
+  "$defs": {
+    "Column": {
+      "additionalProperties": false,
+      "properties": {
+        "dataType": {
+          "$ref": "#/$defs/DataType",
+          "default": "auto"
+        },
+        "field": {
+          "type": "string"
+        },
+        "format": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ColumnFormat"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "header": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "missingAsNull": {
+          "default": false,
+          "type": "boolean"
+        },
+        "numberFormat": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "style": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "width": {
+          "default": null,
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "field"
+      ],
+      "type": "object"
+    },
+    "ColumnFormat": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "$ref": "#/$defs/Style"
+        }
+      ]
+    },
+    "DataType": {
+      "enum": [
+        "auto",
+        "text",
+        "integer",
+        "number",
+        "decimal",
+        "boolean",
+        "date",
+        "datetime",
+        "time",
+        "formula"
+      ],
+      "type": "string"
+    },
+    "Dbms": {
+      "enum": [
+        "postgresql",
+        "sqlserver"
+      ],
+      "type": "string"
+    },
+    "ExportOptions": {
+      "additionalProperties": false,
+      "properties": {
+        "compression": {
+          "default": 6,
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "continueOnError": {
+          "default": false,
+          "type": "boolean"
+        },
+        "maxRows": {
+          "default": 1048576,
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "maxSheets": {
+          "default": 256,
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "maxStyles": {
+          "default": 10000,
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "maxWorkbooks": {
+          "default": 32,
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "tempDirectory": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "Int64Input": {
+      "anyOf": [
+        {
+          "format": "int64",
+          "type": "integer"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "Layout": {
+      "additionalProperties": false,
+      "properties": {
+        "autofilter": {
+          "default": false,
+          "type": "boolean"
+        },
+        "freezeRows": {
+          "default": 1,
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "header": {
+          "default": true,
+          "type": "boolean"
+        },
+        "headerStyle": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "merges": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/Merge"
+          },
+          "type": "array"
+        },
+        "rowHeight": {
+          "default": null,
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "startColumn": {
+          "default": 1,
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "startRow": {
+          "default": 1,
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    },
+    "Merge": {
+      "additionalProperties": false,
+      "properties": {
+        "firstColumn": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "firstRow": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "lastColumn": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "lastRow": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "style": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "text": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "firstRow",
+        "firstColumn",
+        "lastRow",
+        "lastColumn",
+        "text"
+      ],
+      "type": "object"
+    },
+    "Output": {
+      "additionalProperties": false,
+      "properties": {
+        "createParents": {
+          "default": false,
+          "type": "boolean"
+        },
+        "overwrite": {
+          "default": false,
+          "type": "boolean"
+        },
+        "path": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "path"
+      ],
+      "type": "object"
+    },
+    "Parameter": {
+      "oneOf": [
+        {
+          "properties": {
+            "type": {
+              "const": "text",
+              "type": "string"
+            },
+            "value": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "type",
+            "value"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "int32",
+              "type": "string"
+            },
+            "value": {
+              "format": "int32",
+              "type": [
+                "integer",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "type",
+            "value"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "int64",
+              "type": "string"
+            },
+            "value": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Int64Input"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "type",
+            "value"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "float64",
+              "type": "string"
+            },
+            "value": {
+              "format": "double",
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "type",
+            "value"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "boolean",
+              "type": "string"
+            },
+            "value": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "type",
+            "value"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "QueryOptions": {
+      "additionalProperties": false,
+      "properties": {
+        "allowPlaintext": {
+          "default": false,
+          "type": "boolean"
+        },
+        "connectTimeoutMs": {
+          "default": 15000,
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "fetchRows": {
+          "default": 512,
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "maxRowBytes": {
+          "default": 1048576,
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "queryTimeoutMs": {
+          "default": 300000,
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "queueRows": {
+          "default": 16,
+          "format": "uint",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    },
+    "Source": {
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "objects",
+              "type": "string"
+            },
+            "records": {
+              "items": {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "kind",
+            "records"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "connectionString": {
+              "type": "string"
+            },
+            "dbms": {
+              "$ref": "#/$defs/Dbms"
+            },
+            "kind": {
+              "const": "query",
+              "type": "string"
+            },
+            "options": {
+              "$ref": "#/$defs/QueryOptions",
+              "default": {
+                "allowPlaintext": false,
+                "connectTimeoutMs": 15000,
+                "fetchRows": 512,
+                "maxRowBytes": 1048576,
+                "queryTimeoutMs": 300000,
+                "queueRows": 16
+              }
+            },
+            "parameters": {
+              "default": [],
+              "items": {
+                "$ref": "#/$defs/Parameter"
+              },
+              "type": "array"
+            },
+            "query": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "dbms",
+            "connectionString",
+            "query"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "Style": {
+      "additionalProperties": false,
+      "properties": {
+        "background": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "bold": {
+          "default": null,
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "border": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "borderColor": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "fontColor": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "fontName": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "fontSize": {
+          "default": null,
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "horizontal": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "italic": {
+          "default": null,
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "locked": {
+          "default": null,
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "numberFormat": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "rotation": {
+          "default": null,
+          "format": "int16",
+          "maximum": 32767,
+          "minimum": -32768,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "strikeout": {
+          "default": null,
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "underline": {
+          "default": null,
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "vertical": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "wrap": {
+          "default": null,
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "TableSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "maxCells": {
+          "default": 1000000,
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "type": "object"
+    },
+    "WorkbookSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "output": {
+          "$ref": "#/$defs/Output"
+        },
+        "styles": {
+          "additionalProperties": {
+            "$ref": "#/$defs/Style"
+          },
+          "default": {},
+          "type": "object"
+        },
+        "worksheets": {
+          "items": {
+            "$ref": "#/$defs/WorksheetSpec"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "output",
+        "worksheets"
+      ],
+      "type": "object"
+    },
+    "WorksheetSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "bodyStyle": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "columns": {
+          "items": {
+            "$ref": "#/$defs/Column"
+          },
+          "type": "array"
+        },
+        "layout": {
+          "$ref": "#/$defs/Layout",
+          "default": {
+            "autofilter": false,
+            "freezeRows": 1,
+            "header": true,
+            "headerStyle": null,
+            "merges": [],
+            "rowHeight": null,
+            "startColumn": 1,
+            "startRow": 1
+          }
+        },
+        "name": {
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/$defs/Source"
+        },
+        "styles": {
+          "additionalProperties": {
+            "$ref": "#/$defs/Style"
+          },
+          "default": {},
+          "type": "object"
+        },
+        "table": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TableSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "totalRows": {
+          "default": null,
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "writerMode": {
+          "$ref": "#/$defs/WriterMode",
+          "default": "auto"
+        }
+      },
+      "required": [
+        "name",
+        "source",
+        "columns"
+      ],
+      "type": "object"
+    },
+    "WriterMode": {
+      "enum": [
+        "auto",
+        "buffered",
+        "streaming"
+      ],
+      "type": "string"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "options": {
+      "$ref": "#/$defs/ExportOptions",
+      "default": {
+        "compression": 6,
+        "continueOnError": false,
+        "maxRows": 1048576,
+        "maxSheets": 256,
+        "maxStyles": 10000,
+        "maxWorkbooks": 32,
+        "tempDirectory": null
+      }
+    },
+    "schemaVersion": {
+      "default": 1,
+      "format": "uint32",
+      "minimum": 0,
+      "type": "integer"
+    },
+    "styles": {
+      "additionalProperties": {
+        "$ref": "#/$defs/Style"
+      },
+      "default": {},
+      "type": "object"
+    },
+    "workbooks": {
+      "items": {
+        "$ref": "#/$defs/WorkbookSpec"
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "workbooks"
+  ],
+  "title": "ExportRequest",
+  "type": "object"
+}
