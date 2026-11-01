@@ -49,6 +49,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     for (from, to) in [
         ("native_excel_node.dll", "native_excel.node"),
         ("native_excel_ffi.dll", "native_excel_ffi.dll"),
+        ("native-excel.exe", "native-excel.exe"),
         ("libnative_excel.rlib", "libnative_excel.rlib"),
     ] {
         std::fs::copy(artifacts.join(from), dist.join(to))?;

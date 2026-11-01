@@ -224,6 +224,8 @@ impl Default for QueryOptions {
 #[derive(Clone, Serialize, Deserialize, JsonSchema)]
 #[serde(default, rename_all = "camelCase", deny_unknown_fields)]
 pub struct ExportOptions {
+    pub telemetry: crate::TelemetryOptions,
+    pub progress_interval_ms: u64,
     pub temp_directory: Option<String>,
     pub max_styles: usize,
     pub max_workbooks: usize,
@@ -235,6 +237,8 @@ pub struct ExportOptions {
 impl Default for ExportOptions {
     fn default() -> Self {
         Self {
+            telemetry: Default::default(),
+            progress_interval_ms: 250,
             temp_directory: None,
             max_styles: 10_000,
             max_workbooks: 32,
@@ -377,13 +381,14 @@ pub struct WorkbookReport {
     pub rows: u64,
     pub error: Option<ExportError>,
 }
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct JobStatus {
     pub phase: String,
     pub rows_written: u64,
     pub files_published: u64,
     pub total_rows: Option<u64>,
+    pub telemetry_errors: u64,
 }
 pub type Row = BTreeMap<String, Value>;
 

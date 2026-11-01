@@ -4,6 +4,8 @@ The generated JSON schema is authoritative for accepted keys. Call `cargo xtask 
 
 ## Export request
 
+Export options also accept `progressIntervalMs` (250 by default) and `telemetry: { logPath?, metricsPath?, sampleIntervalMs? }`. Telemetry is disabled when no destination/custom sink is supplied. File paths must be absolute and have existing parent directories. Logs are JSONL; metrics are Prometheus textfile snapshots. See [telemetry and progress](guides/telemetry.md) for CLI flags, redaction, failure behavior, and custom sink integration. `JobStatus` additionally exposes `telemetryErrors`; Rust jobs provide `subscribe_progress()` independently of logging.
+
 | Field | Default | Behavior |
 | --- | --- | --- |
 | `schemaVersion` | 1 | Only version 1 is accepted |

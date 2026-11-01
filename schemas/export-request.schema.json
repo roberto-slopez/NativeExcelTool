@@ -130,6 +130,20 @@
           "minimum": 0,
           "type": "integer"
         },
+        "progressIntervalMs": {
+          "default": 250,
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "telemetry": {
+          "$ref": "#/$defs/TelemetryOptions",
+          "default": {
+            "logPath": null,
+            "metricsPath": null,
+            "sampleIntervalMs": 1000
+          }
+        },
         "tempDirectory": {
           "default": null,
           "type": [
@@ -624,6 +638,32 @@
       ],
       "type": "object"
     },
+    "TelemetryOptions": {
+      "additionalProperties": false,
+      "properties": {
+        "logPath": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "metricsPath": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "sampleIntervalMs": {
+          "default": 1000,
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    },
     "WorkbookSpec": {
       "additionalProperties": false,
       "properties": {
@@ -749,6 +789,12 @@
         "maxSheets": 256,
         "maxStyles": 10000,
         "maxWorkbooks": 32,
+        "progressIntervalMs": 250,
+        "telemetry": {
+          "logPath": null,
+          "metricsPath": null,
+          "sampleIntervalMs": 1000
+        },
         "tempDirectory": null
       }
     },

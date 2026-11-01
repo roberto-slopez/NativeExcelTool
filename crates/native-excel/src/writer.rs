@@ -13,12 +13,16 @@ use tokio_util::sync::CancellationToken;
 
 #[derive(Clone)]
 pub struct ExportJob {
+    progress: tokio::sync::watch::Sender<JobStatus>,
     cancel: CancellationToken,
     status: Arc<Mutex<JobStatus>>,
     result: Arc<Mutex<Option<Result<ExportReport>>>>,
     done: Arc<tokio::sync::Notify>,
 }
 impl ExportJob {
+    pub fn subscribe_progress(&self) -> tokio::sync::watch::Receiver<JobStatus> {
+        self.progress.subscribe()
+    }
     pub fn cancel(&self) {
         self.cancel.cancel();
     }
@@ -41,6 +45,7 @@ impl ExportJob {
 pub struct ExcelExporter;
 impl ExcelExporter {
     pub fn validate(request: &ExportRequest) -> Result<()> {
+        crate::telemetry::validate(request)?;
         let options = &request.options;
         if request.schema_version != 1
             || request.workbooks.is_empty()
@@ -211,15 +216,26 @@ impl ExcelExporter {
         Ok(())
     }
     pub fn start(request: ExportRequest) -> Result<ExportJob> {
+        Self::start_with_sink(request, None)
+    }
+    pub fn start_with_sink(
+        request: ExportRequest,
+        sink: Option<Arc<dyn TelemetrySink>>,
+    ) -> Result<ExportJob> {
         Self::validate(&request)?;
         let handle = tokio::runtime::Handle::try_current()
             .map_err(|_| ExportError::invalid("A Tokio runtime is required"))?;
+        let mut telemetry = crate::telemetry::Telemetry::open(&request.options.telemetry, sink)?;
+        let sample_interval = request.options.telemetry.sample_interval_ms;
+        let progress_interval = request.options.progress_interval_ms;
         let job = ExportJob {
+            progress: tokio::sync::watch::channel(JobStatus::default()).0,
             cancel: CancellationToken::new(),
             status: Arc::new(Mutex::new(JobStatus {
                 phase: "running".into(),
                 rows_written: 0,
                 files_published: 0,
+                telemetry_errors: 0,
                 total_rows: request
                     .workbooks
                     .iter()
@@ -234,11 +250,25 @@ impl ExcelExporter {
             result: Arc::new(Mutex::new(None)),
             done: Arc::new(tokio::sync::Notify::new()),
         };
+        job.progress.send_replace(job.status());
         let worker = job.clone();
         tokio::spawn(async move {
+            record_telemetry(&worker, &mut telemetry).await;
             let work = worker.clone();
-            let result = tokio::task::spawn_blocking(move || execute(request, &work, &handle))
-                .await
+            let mut task = tokio::task::spawn_blocking(move || execute(request, &work, &handle));
+            let mut interval = tokio::time::interval(std::time::Duration::from_millis(
+                progress_interval.min(sample_interval),
+            ));
+            let mut sampled: Option<std::time::Instant> = None;
+            let result=loop {tokio::select! {
+                result=&mut task=>break result,
+                _=interval.tick()=>{
+                    worker.progress.send_replace(worker.status());
+                    if sampled.is_none_or(|t|t.elapsed().as_millis()>=u128::from(sample_interval)) {
+                        record_telemetry(&worker,&mut telemetry).await;sampled=Some(std::time::Instant::now());
+                    }
+                }
+            }}
                 .unwrap_or_else(|_| {
                     Err(ExportError::new("INTERNAL_ERROR", "Export worker failed"))
                 });
@@ -248,6 +278,8 @@ impl ExcelExporter {
                 Err(_) => "failed",
             }
             .into();
+            record_telemetry(&worker, &mut telemetry).await;
+            worker.progress.send_replace(worker.status());
             *worker.result.lock().unwrap() = Some(result);
             worker.done.notify_waiters();
         });
@@ -255,6 +287,23 @@ impl ExcelExporter {
     }
     pub async fn export(request: ExportRequest) -> Result<ExportReport> {
         Self::start(request)?.result().await
+    }
+}
+async fn record_telemetry(job: &ExportJob, telemetry: &mut Option<crate::telemetry::Telemetry>) {
+    if let Some(mut logger) = telemetry.take() {
+        let status = job.status();
+        match tokio::task::spawn_blocking(move || {
+            let errors = logger.record(&status);
+            (logger, errors)
+        })
+        .await
+        {
+            Ok((logger, errors)) => {
+                *telemetry = Some(logger);
+                job.status.lock().unwrap().telemetry_errors += errors;
+            }
+            Err(_) => job.status.lock().unwrap().telemetry_errors += 1,
+        }
     }
 }
 fn normalized_path(path: &str) -> Result<String> {

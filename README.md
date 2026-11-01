@@ -1,5 +1,7 @@
 # NativeExcelTool
 
+Progress and opt-in telemetry are documented in [the telemetry guide](docs/guides/telemetry.md). The [remaining implementation plan](docs/REMAINING_PLAN.md) records the concrete closure steps and acceptance gates.
+
 Native Rust library for creating Excel `.xlsx` reports from object records and incrementally consumed PostgreSQL or SQL Server queries. It also builds a Node-API addon and a native DLL for C# P/Invoke.
 
 This repository contains a working initial implementation. See [implementation status](docs/IMPLEMENTATION_STATUS.md) for the remaining items in the larger [implementation plan](docs/IMPLEMENTATION_PLAN.md). Database adapters compile, but live database integration has not yet been validated in this environment.

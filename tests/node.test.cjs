@@ -19,6 +19,20 @@ test('native addon exports two independent workbooks', async () => {
 });
 test('native validation rejects unknown properties', () => assert.throws(() => excel.validate({workbooks:[],typo:true})));
 test('schema is exposed by native library', () => assert.equal(excel.schema().title,'ExportRequest'));
+test('native libraries enable file telemetry only with explicit absolute destinations', async () => {
+  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'native-excel-telemetry-'));
+  try {
+    const request=JSON.parse(fs.readFileSync('examples/configs/typed-report.json','utf8'));
+    request.workbooks[0].output.path=path.join(dir,'report.xlsx');
+    request.options={telemetry:{logPath:path.join(dir,'events.jsonl'),metricsPath:path.join(dir,'metrics.prom')}};
+    await excel.exportWorkbooks(request);
+    const events=fs.readFileSync(path.join(dir,'events.jsonl'),'utf8').trim().split('\n').map(JSON.parse);
+    assert.equal(events.at(-1).phase,'succeeded');
+    assert.ok(fs.readFileSync(path.join(dir,'metrics.prom'),'utf8').includes('native_excel_rows_written{job='));
+    request.options.telemetry.logPath='relative.jsonl';
+    assert.throws(()=>excel.validate(request),/absolute/);
+  } finally { fs.rmSync(dir,{recursive:true,force:true}); }
+});
 test('typed report total is validated before creating output', () => {
   const request=JSON.parse(fs.readFileSync('examples/configs/typed-report.json','utf8'));
   excel.validate(request);
