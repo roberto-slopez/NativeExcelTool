@@ -8,7 +8,7 @@ Open `samples/orders-node.xlsx` and `samples/orders-dotnet.xlsx` in Excel or Lib
 
 ## Run both examples
 
-Install Windows x64 Node.js 24 and the .NET 10 SDK. Extract the entire ZIP before running the commands. Rust and Visual Studio build tools are not required to run this bundle.
+Install Windows x64 Node.js 24, the .NET 10 SDK, and the latest [Microsoft Visual C++ v14 x64 Redistributable](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist). The native binaries import `VCRUNTIME140.dll`; the runtime may already be installed. Extract the entire ZIP before running the commands. Rust and Visual Studio build tools are not required to run this bundle.
 
 From the extracted folder in PowerShell:
 
