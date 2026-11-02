@@ -10,7 +10,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        profile: [debug, release]
+        include:
+          - profile: debug
+            cargo_flags: ''
+          - profile: release
+            cargo_flags: '--release'
     env:
       NATIVE_EXCEL_PROFILE: ${{ matrix.profile }}
     steps:
@@ -26,14 +30,10 @@ jobs:
           dotnet-version: '10.0.x'
       - run: cargo fmt --all -- --check
       - run: cargo clippy --locked --workspace --all-targets -- -D warnings
-      - name: Rust tests and native packaging
-        shell: pwsh
-        run: |
-          $flags = if ($env:NATIVE_EXCEL_PROFILE -eq 'release') { @('--release') } else { @() }
-          cargo test --locked -p native-excel -p native-excel-ffi --tests @flags
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          cargo run --locked -p xtask -- build-all @flags
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Rust tests
+        run: cargo test --locked -p native-excel -p native-excel-ffi --tests ${{ matrix.cargo_flags }}
+      - name: Build and package native libraries
+        run: cargo run --locked -p xtask -- build-all ${{ matrix.cargo_flags }}
       - run: node --test tests/node.test.cjs
       - name: Execute and verify both 10-row examples
         run: ./scripts/run-examples.ps1 -Profile $env:NATIVE_EXCEL_PROFILE
