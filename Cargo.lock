@@ -780,7 +780,7 @@ dependencies = [
 
 [[package]]
 name = "native-excel"
-version = "0.1.0"
+version = "0.1.0-alpha.1"
 dependencies = [
  "calamine",
  "chrono",
@@ -804,7 +804,7 @@ dependencies = [
 
 [[package]]
 name = "native-excel-ffi"
-version = "0.1.0"
+version = "0.1.0-alpha.1"
 dependencies = [
  "native-excel",
  "serde_json",
@@ -813,7 +813,7 @@ dependencies = [
 
 [[package]]
 name = "native-excel-node"
-version = "0.1.0"
+version = "0.1.0-alpha.1"
 dependencies = [
  "napi",
  "napi-build",
@@ -2120,7 +2120,7 @@ dependencies = [
 
 [[package]]
 name = "xtask"
-version = "0.1.0"
+version = "0.1.0-alpha.1"
 dependencies = [
  "native-excel",
  "serde_json",

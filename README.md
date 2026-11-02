@@ -1,5 +1,7 @@
 # NativeExcelTool
 
+The **0.1.0-alpha.1** Windows x64 bundle includes runnable C# and Node.js examples with **10 sales orders each**, a structured Excel table (`SalesOrders`, `A1:H11`), and generated workbooks to open immediately. See the [alpha quickstart](docs/ALPHA_QUICKSTART.md) and [release notes](docs/releases/v0.1.0-alpha.1.md).
+
 Reports can include [dynamic merged titles and metadata headers](docs/guides/report-headers.md). See the [complete report-header example](examples/configs/report-header.json).
 
 Progress and opt-in telemetry are documented in [the telemetry guide](docs/guides/telemetry.md). The [remaining implementation plan](docs/REMAINING_PLAN.md) records the concrete closure steps and acceptance gates.
@@ -119,6 +121,8 @@ node examples/node/export.cjs
 node --test tests/node.test.cjs
 ```
 
+The runnable Node example builds 10 orders in JavaScript and creates `output/orders-node.xlsx`. Select optimized binaries with `$env:NATIVE_EXCEL_PROFILE = 'release'` after `cargo xtask build-all --release`.
+
 ## C#
 
 Include [NativeExcelNative.cs](bindings/dotnet/NativeExcelNative.cs), place the DLL in a configured native search path, and call:
@@ -128,11 +132,14 @@ var report = NativeExcelNative.Export(File.ReadAllText("examples/configs/objects
 Console.WriteLine(report);
 ```
 
-The included example resolves the DLL from `dist/debug`:
+The included example constructs 10 typed C# orders and writes `output/orders-dotnet.xlsx`. The project copies the matching DLL from `dist/debug` (default) or `dist/release` (`--configuration Release`):
 
 ```powershell
 dotnet run --project examples/dotnet
+dotnet run --project examples/dotnet --configuration Release
 ```
+
+After building native binaries, run `./scripts/run-examples.ps1 -Profile debug` (or `release`) to execute both examples and independently verify the 10 rows, Excel table, numeric/date/boolean cells, and USD 1831.28 total in each workbook.
 
 For jobs, call `ne_export_start_json`, poll `ne_job_status_json`, then obtain `ne_job_result_json`. Release every job in `finally`. Free every native output with `ne_buffer_free`; the `Read` helper does this automatically, including error cases. For large/precise numbers, construct tagged values before serializing the request. JSON object input currently materializes the caller's array in native memory.
 

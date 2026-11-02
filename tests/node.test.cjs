@@ -3,7 +3,9 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const excel = require('../dist/debug/index.cjs');
+const profile = process.env.NATIVE_EXCEL_PROFILE || 'debug';
+if (!['debug', 'release'].includes(profile)) throw new Error('NATIVE_EXCEL_PROFILE must be debug or release');
+const excel = require(path.join(__dirname, '../dist', profile, 'index.cjs'));
 test('native addon exports two independent workbooks', async () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'native-excel-node-'));
   try {

@@ -1,22 +1,50 @@
 name: Windows validation
-on: [push, pull_request]
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
 jobs:
   native:
+    name: Windows x64 (${{ matrix.profile }})
     runs-on: windows-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        profile: [debug, release]
+    env:
+      NATIVE_EXCEL_PROFILE: ${{ matrix.profile }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@1.99.1
         with:
           components: rustfmt, clippy
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '24'
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '10.0.x'
       - run: cargo fmt --all -- --check
-      - run: cargo clippy --workspace --all-targets -- -D warnings
-      - run: cargo test -p native-excel -p native-excel-ffi --tests
-      - run: cargo xtask build-all
+      - run: cargo clippy --locked --workspace --all-targets -- -D warnings
+      - name: Rust tests and native packaging
+        shell: pwsh
+        run: |
+          $flags = if ($env:NATIVE_EXCEL_PROFILE -eq 'release') { @('--release') } else { @() }
+          cargo test --locked -p native-excel -p native-excel-ffi --tests @flags
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo run --locked -p xtask -- build-all @flags
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - run: node --test tests/node.test.cjs
-      - run: dotnet run --project examples/dotnet
+      - name: Execute and verify both 10-row examples
+        run: ./scripts/run-examples.ps1 -Profile $env:NATIVE_EXCEL_PROFILE
+      - name: Package alpha binaries and examples
+        if: matrix.profile == 'release'
+        run: ./scripts/package-alpha.ps1
+      - uses: actions/upload-artifact@v7
+        if: matrix.profile == 'release'
+        with:
+          name: windows-x64-alpha
+          path: |
+            dist/packages/*.zip
+            dist/packages/*.sha256
+          if-no-files-found: error

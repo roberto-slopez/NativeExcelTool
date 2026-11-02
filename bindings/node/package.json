@@ -1,6 +1,6 @@
 {
   "name": "native-excel-tool",
-  "version": "0.1.0",
+  "version": "0.1.0-alpha.1",
   "description": "Rust-native Excel exports and database row streams",
   "main": "index.cjs",
   "types": "index.d.ts",
