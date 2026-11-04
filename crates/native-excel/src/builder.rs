@@ -1,5 +1,7 @@
-//! Buffered random-access workbook/sheet builders (with `oldexcel` reference parity)
-//! and append-only streaming writers.
+//! Buffered workbook builders and append-only streaming writers.
+//!
+//! The buffered builders support cell editing patterns from `msexcel-builder`
+//! with validated coordinates and sparse cell storage.
 use crate::{Column, DataType, ExportError, Result, Row, Style};
 use rust_xlsxwriter::Workbook;
 use serde_json::Value;
@@ -90,7 +92,9 @@ pub struct BorderSpec {
 }
 
 /// Buffered worksheet builder supporting sparse random-access cell edits, styles, and merges.
-/// Provides behavioral parity with `oldexcel`'s `Sheet` class without eager grid allocation.
+///
+/// Supports the cell editing operations of the `msexcel-builder` `Sheet` class
+/// without allocating a dense grid for the declared dimensions.
 #[derive(Clone)]
 pub struct SheetBuilder {
     name: String,
@@ -316,7 +320,9 @@ impl SheetBuilder {
     }
 }
 
-/// Encapsulated buffered workbook builder providing `oldexcel` parity (`createSheet`, `save`, `cancel`).
+/// Buffered workbook builder with worksheet creation, saving, and cancellation.
+///
+/// Provides Rust equivalents of the `msexcel-builder` workbook operations.
 pub struct WorkbookBuilder {
     output_path: PathBuf,
     overwrite: bool,

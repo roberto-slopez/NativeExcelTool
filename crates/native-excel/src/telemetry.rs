@@ -1,4 +1,8 @@
-//! Opt-in, per-export telemetry. No global subscriber, environment reads, or network I/O.
+//! Opt-in telemetry for individual exports.
+//!
+//! Built-in sinks write local files without installing global subscribers,
+//! reading environment configuration, or making network requests. Host-provided
+//! sinks define their own behavior.
 use crate::{ExportError, ExportRequest, JobStatus, Result};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -41,7 +45,9 @@ pub struct TelemetryEvent {
     pub files_published: u64,
     pub telemetry_errors: u64,
 }
-/// Host adapters may bridge events to OpenTelemetry or another collector.
+/// Receives telemetry events through a host-provided adapter.
+///
+/// Adapters may bridge events to OpenTelemetry or another collector.
 /// Implementations must return promptly, avoid panics, and redact their own added attributes.
 pub trait TelemetrySink: Send + Sync {
     fn record(&self, event: &TelemetryEvent) -> std::io::Result<()>;

@@ -110,8 +110,6 @@ The pinned backend stores a per-cell overlap map for structured tables. They the
 
 ```powershell
 cargo run -p native-excel --example export -- examples/configs/typed-report.json
-node examples/node/export.cjs examples/configs/typed-report.json
-dotnet run --project examples/dotnet -- debug examples/configs/typed-report.json
 ```
 
-Run `cargo xtask build-all` before Node/C# examples, or `cargo xtask build-all --release` and select the release package/DLL. In Node, import `dist/release/index.cjs` for the optimized addon. In C#, use `release` as the first example argument. No C ABI signature changed; all features are parameters in the shared JSON request.
+For typed columns in the C# and Node.js sales reports, run `cargo xtask build-all` followed by `./scripts/run-examples.ps1 -Profile debug`. Use the `release` profile with optimized binaries. Both examples pass typed columns through the shared JSON request.

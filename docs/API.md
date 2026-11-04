@@ -110,7 +110,7 @@ All style properties are optional. Colors must be six-digit RGB with optional `#
 ## Programmatic Rust Builders
 
 In addition to `ExcelExporter` and `QueryService`, the `native-excel` crate provides:
-- `WorkbookBuilder` and `SheetBuilder`: buffered random-access builders matching `oldexcel` (`create_sheet`, `set`, `set_typed`, `set_a1`, `set_formula`, `merge`, `width`, `height`, `font`, `fill`, `border`, `align`, `valign`, `rotate`, `wrap`, `number_format`, `save`, `save_to_bytes`, `cancel`), plus `column_index_to_name`, `column_name_to_index`, and `parse_cell_ref` validated through `XFD` (`16384`).
+- `WorkbookBuilder` and `SheetBuilder`: buffered random-access builders supporting `msexcel-builder` operations (`create_sheet`, `set`, `set_typed`, `set_a1`, `set_formula`, `merge`, `width`, `height`, `font`, `fill`, `border`, `align`, `valign`, `rotate`, `wrap`, `number_format`, `save`, `save_to_bytes`, `cancel`), plus `column_index_to_name`, `column_name_to_index`, and `parse_cell_ref` validated through `XFD` (`16384`).
 - `AppendWorkbookWriter`: streaming append-only row writer (`new`, `write_row`, `write_batch`, `finish`).
 - `InputSession` and `InputService`: bounded incremental caller-input streams for `Source::RowStream`.
 - `ExcelExporter::capabilities()`, `ExcelExporter::export_objects(...)`, and `ExcelExporter::export_query(...)`.

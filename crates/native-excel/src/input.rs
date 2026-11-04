@@ -60,7 +60,8 @@ fn validate_options(options: &InputOptions) -> Result<()> {
 }
 
 /// Handle for incremental caller-provided records.
-/// Dropping an unfinished session aborts the stream and signals cancellation to any reader.
+///
+/// Dropping an unfinished session releases its registered stream and requests cancellation.
 pub struct InputSession {
     id: String,
     entry: Arc<Mutex<RegisteredInput>>,
@@ -93,9 +94,10 @@ impl InputSession {
         finish_internal(&self.id, &self.entry)
     }
 
-    pub fn close(self) {
-        // Drop triggers cleanup
-    }
+    /// Releases this session through its [`Drop`] implementation.
+    ///
+    /// Releasing an unfinished stream requests cancellation of its consumer.
+    pub fn close(self) {}
 }
 
 impl Drop for InputSession {

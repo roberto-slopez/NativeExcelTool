@@ -34,7 +34,7 @@ fn excel_coordinates_roundtrip_through_xfd() {
 }
 
 #[test]
-fn workbook_builder_matches_oldexcel_capabilities_with_typed_cells() {
+fn workbook_builder_matches_msexcel_builder_capabilities_with_typed_cells() {
     let dir = tempfile::tempdir().unwrap();
     let out = dir.path().join("builder.xlsx");
     let mut wb = WorkbookBuilder::new(&out);

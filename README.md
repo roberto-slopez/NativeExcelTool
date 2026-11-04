@@ -8,13 +8,13 @@ Progress and opt-in telemetry are documented in [the telemetry guide](docs/guide
 
 Native Rust library for creating Excel `.xlsx` reports from object records and incrementally consumed PostgreSQL or SQL Server queries. It also builds a Node-API addon and a native DLL for C# P/Invoke.
 
-This repository contains a working initial implementation. See [implementation status](docs/IMPLEMENTATION_STATUS.md) for the remaining items in the larger [implementation plan](docs/IMPLEMENTATION_PLAN.md). Database adapters compile, but live database integration has not yet been validated in this environment.
+This repository contains a working alpha implementation. See the tracked [remaining implementation plan](docs/REMAINING_PLAN.md) for outstanding release gates. Database adapters compile, but live database integration has not yet been validated in this environment.
 
 Reports now support exact `totalRows`, declared column `dataType`, native Excel date/currency/percentage formats, one-time uniform column-style setup, and buffered structured Excel tables. See [the typed-column guide](docs/guides/typed-columns.md) and [the runnable invoice example](examples/configs/typed-report.json).
 
 ## Build
 
-Prerequisites: stable Rust with the Windows MSVC target and Visual Studio C++ build tools. The verified initial target is Windows x64. Node.js is required for Node smoke tests; .NET 10 is used by the included C# example. Neither Node nor .NET implements the export engine.
+Prerequisites: the Rust toolchain pinned in `rust-toolchain.toml`, the Windows MSVC target, and Visual Studio C++ build tools. The verified initial target is Windows x64. CI uses Node.js 24 for Node smoke tests and .NET 10 for the included C# example. Neither Node nor .NET implements the export engine.
 
 ```powershell
 cargo xtask build-all
@@ -121,7 +121,7 @@ node examples/node/export.cjs
 node --test tests/node.test.cjs
 ```
 
-The runnable Node example builds 10 orders in JavaScript and creates `output/orders-node.xlsx`. Select optimized binaries with `$env:NATIVE_EXCEL_PROFILE = 'release'` after `cargo xtask build-all --release`.
+The runnable Node example builds 10 orders in JavaScript and creates `output/orders-node.xlsx`. The report includes a merged title, the order date range, sales totals, unpaid balance, order counts, and a filterable table. Select optimized binaries with `$env:NATIVE_EXCEL_PROFILE = 'release'` after `cargo xtask build-all --release`.
 
 ## C#
 
@@ -139,7 +139,14 @@ dotnet run --project examples/dotnet
 dotnet run --project examples/dotnet --configuration Release
 ```
 
-After building native binaries, run `./scripts/run-examples.ps1 -Profile debug` (or `release`) to execute both examples and independently verify the 10 rows, Excel table, numeric/date/boolean cells, and USD 1831.28 total in each workbook.
+After building native binaries, run `./scripts/run-examples.ps1 -Profile debug` (or `release`) to generate both reports and verify the merged headers, computed summary, frozen rows, and 10 orders in the filterable table at `A7:H17`. Edit the orders in either example to recalculate the summary when you rerun it.
+
+To generate just the table, pass `--table-only`. Each example saves this mode to a separate file with a `-table.xlsx` suffix by default.
+
+```powershell
+node examples/node/export.cjs --table-only
+dotnet run --project examples/dotnet -- --table-only
+```
 
 For jobs, call `ne_export_start_json`, poll `ne_job_status_json`, then obtain `ne_job_result_json`. Release every job in `finally`. Free every native output with `ne_buffer_free`; the `Read` helper does this automatically, including error cases. For large/precise numbers, construct tagged values before serializing the request. JSON object input currently materializes the caller's array in native memory.
 
@@ -196,4 +203,10 @@ cargo clippy --workspace --all-targets -- -D warnings
 
 Tests read output with an independent XLSX reader and verify multiple workbooks, exact integer text, typed numeric cells, formulas versus literal strings, column addresses beyond Z, failure cleanup, overwrite protection, cancellation, row limits, and native buffer ownership.
 
-Live integration, large-volume RSS measurements, Excel/LibreOffice desktop smoke opens, release signing, and registry publication must be completed before claiming production certification. See [implementation status](docs/IMPLEMENTATION_STATUS.md).
+Live integration, large-volume RSS measurements, Excel/LibreOffice desktop smoke opens, release signing, and registry publication must be completed before claiming production certification. See the [remaining implementation plan](docs/REMAINING_PLAN.md).
+
+## Reference implementation and contributor guidance
+
+The optional local `msexcel-builder/` directory retains the original project's name and is excluded from Git. It is a reference for behavior and migration, not a runtime dependency. Build and packaging use the tracked `licenses/msexcel-builder.LICENSE`; `msexcel-builder/LICENSE` is an optional local fallback. Clean checkouts do not require the reference directory.
+
+See [AGENTS.md](AGENTS.md) for the repository architecture, source ownership, validation commands, code documentation conventions, and release workflow.

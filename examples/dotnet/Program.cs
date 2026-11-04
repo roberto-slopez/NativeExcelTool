@@ -17,7 +17,39 @@ Order[] orders = [
     new("ORD-1009", "Proseware", "HDMI cable", new(2026, 10, 28), 10, 12.50m, true),
     new("ORD-1010", "Coho Winery", "Printer", new(2026, 10, 29), 1, 179.00m, false)
 ];
-var output = Path.GetFullPath(args.Length > 0 ? args[0] : "output/orders-dotnet.xlsx");
+var tableOnly = args.Contains("--table-only");
+var output = Path.GetFullPath(args.FirstOrDefault(arg => arg != "--table-only") ??
+    (tableOnly ? "output/orders-dotnet-table.xlsx" : "output/orders-dotnet.xlsx"));
+const string CurrencyFormat = "\"$\"#,##0.00";
+var totalSales = orders.Sum(order => order.Total);
+var unpaidSales = orders.Where(order => !order.Paid).Sum(order => order.Total);
+var reportHeader = new
+{
+    title = new { text = "Sales Order Report | USD", height = 34, style = new { background = "#16324F", fontColor = "#FFFFFF" } },
+    labelHeight = 18,
+    valueHeight = 24,
+    gapRows = 1,
+    labelStyle = new { background = "#E3EDF5", fontColor = "#16324F" },
+    valueStyle = new { background = "#F2F6FA", fontColor = "#16324F", fontSize = 13 },
+    columns = new[]
+    {
+        new { fields = new object[]
+        {
+            new { label = "Period start", value = orders.Min(order => order.OrderDate), dataType = "date", numberFormat = "yyyy-mm-dd" },
+            new { label = "Period end", value = orders.Max(order => order.OrderDate), dataType = "date", numberFormat = "yyyy-mm-dd" }
+        } },
+        new { fields = new object[]
+        {
+            new { label = "Total sales", value = totalSales, dataType = "number", numberFormat = CurrencyFormat },
+            new { label = "Unpaid balance", value = unpaidSales, dataType = "number", numberFormat = CurrencyFormat }
+        } },
+        new { fields = new object[]
+        {
+            new { label = "Orders", value = orders.Length, dataType = "integer" },
+            new { label = "Paid orders", value = orders.Count(order => order.Paid), dataType = "integer" }
+        } }
+    }
+};
 var request = new
 {
     schemaVersion = 1,
@@ -31,6 +63,7 @@ var request = new
         {
             name = "Orders", writerMode = "buffered", totalRows = orders.Length,
             table = new { name = "SalesOrders", maxCells = 1000 },
+            reportHeader = tableOnly ? null : reportHeader,
             layout = new { headerStyle = "heading", freezeRows = 1 },
             source = new { kind = "objects", records = orders },
             columns = new object[]
@@ -52,10 +85,10 @@ NativeExcelNative.Validate(json);
 var report = await NativeExcelNative.ExportAsync(json);
 var workbook = report.GetProperty("workbooks")[0];
 if (workbook.GetProperty("error").ValueKind != JsonValueKind.Null ||
-    workbook.GetProperty("rows").GetInt32() != 10 || workbook.GetProperty("sheetsCompleted").GetInt32() != 1)
+    workbook.GetProperty("rows").GetInt32() != orders.Length || workbook.GetProperty("sheetsCompleted").GetInt32() != 1)
     throw new InvalidOperationException($"Export did not complete: {report}");
-Console.WriteLine($"Created {output}: 10 orders in Excel table SalesOrders (A1:H11).");
-Console.WriteLine(FormattableString.Invariant($"Total sales: USD {orders.Sum(order => order.Total):0.00}"));
+Console.WriteLine($"Created {output} with {orders.Length} orders in SalesOrders.");
+Console.WriteLine(FormattableString.Invariant($"Total sales: USD {totalSales:0.00}"));
 
 record Order(string OrderId, string Customer, string Product, DateOnly OrderDate, int Quantity, decimal UnitPrice, bool Paid)
 {

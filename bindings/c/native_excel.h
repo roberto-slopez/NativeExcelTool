@@ -5,9 +5,30 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Length-delimited UTF-8 JSON owned by the native library, without a NUL terminator.
+ * Free each returned allocation exactly once with ne_buffer_free, including errors.
+ * Do not modify the returned pointer or length or use a different allocator.
+ */
 typedef struct NeBuffer { uint8_t *data; size_t len; } NeBuffer;
+
+/** Returns the C ABI contract version. */
 uint32_t ne_abi_version(void);
+/** Releases a library-owned allocation. A null data pointer is a no-op. */
 void ne_buffer_free(NeBuffer buffer);
+
+/**
+ * JSON operations return 0 on success and 1 on failure. A non-null out pointer must
+ * be aligned and exclusively writable for one NeBuffer. Release any allocation
+ * previously stored there before reuse. Both success and failure produce an owned
+ * JSON response; a null out pointer returns failure without allocating a response.
+ *
+ * Input data must remain readable and unmodified for len bytes during the call.
+ * UTF-8 and request contents are validated by the library. Invalid handles return
+ * JSON errors. Release every job, query, and input handle with its matching function.
+ * Query reads, job results, event polling, and input writes can block; invoke them
+ * on an appropriate application worker thread.
+ */
 int32_t ne_capabilities_json(NeBuffer *out);
 int32_t ne_schema_json(NeBuffer *out);
 int32_t ne_validate_json(const uint8_t *data, size_t len, NeBuffer *out);

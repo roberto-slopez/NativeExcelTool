@@ -5,7 +5,10 @@ const path = require('node:path');
 const profile = process.env.NATIVE_EXCEL_PROFILE || 'debug';
 if (!['debug', 'release'].includes(profile)) throw new Error('NATIVE_EXCEL_PROFILE must be debug or release');
 const excel = require(path.join(__dirname, '../../dist', profile, 'index.cjs'));
-const output = path.resolve(process.argv[2] || 'output/orders-node.xlsx');
+const args = process.argv.slice(2);
+const tableOnly = args.includes('--table-only');
+const output = path.resolve(args.find(arg => arg !== '--table-only')
+  || (tableOnly ? 'output/orders-node-table.xlsx' : 'output/orders-node.xlsx'));
 
 const orders = [
   { orderId: 'ORD-1001', customer: 'Northwind', product: 'Keyboard', orderDate: '2026-10-20', quantity: 2, unitPrice: 49.95, paid: true },
@@ -20,6 +23,33 @@ const orders = [
   { orderId: 'ORD-1010', customer: 'Coho Winery', product: 'Printer', orderDate: '2026-10-29', quantity: 1, unitPrice: 179.00, paid: false }
 ].map(order => ({ ...order, total: Math.round(order.quantity * order.unitPrice * 100) / 100 }));
 
+const currencyFormat = '"$"#,##0.00';
+const dates = orders.map(order => order.orderDate).sort();
+const totalSales = orders.reduce((sum, order) => sum + Math.round(order.total * 100), 0) / 100;
+const unpaidSales = orders.reduce((sum, order) => sum + (order.paid ? 0 : Math.round(order.total * 100)), 0) / 100;
+const reportHeader = {
+  title: { text: 'Sales Order Report | USD', height: 34, style: { background: '#16324F', fontColor: '#FFFFFF' } },
+  labelHeight: 18,
+  valueHeight: 24,
+  gapRows: 1,
+  labelStyle: { background: '#E3EDF5', fontColor: '#16324F' },
+  valueStyle: { background: '#F2F6FA', fontColor: '#16324F', fontSize: 13 },
+  columns: [
+    { fields: [
+      { label: 'Period start', value: dates[0], dataType: 'date', numberFormat: 'yyyy-mm-dd' },
+      { label: 'Period end', value: dates[dates.length - 1], dataType: 'date', numberFormat: 'yyyy-mm-dd' }
+    ] },
+    { fields: [
+      { label: 'Total sales', value: totalSales, dataType: 'number', numberFormat: currencyFormat },
+      { label: 'Unpaid balance', value: unpaidSales, dataType: 'number', numberFormat: currencyFormat }
+    ] },
+    { fields: [
+      { label: 'Orders', value: orders.length, dataType: 'integer' },
+      { label: 'Paid orders', value: orders.filter(order => order.paid).length, dataType: 'integer' }
+    ] }
+  ]
+};
+
 const request = {
   schemaVersion: 1,
   styles: { heading: { bold: true, background: '#16324F', fontColor: '#FFFFFF' } },
@@ -30,6 +60,7 @@ const request = {
     worksheets: [{
       name: 'Orders', writerMode: 'buffered', totalRows: orders.length,
       table: { name: 'SalesOrders', maxCells: 1000 },
+      ...(tableOnly ? {} : { reportHeader }),
       layout: { headerStyle: 'heading', freezeRows: 1 },
       source: { kind: 'objects', records: orders },
       columns: [
@@ -50,11 +81,11 @@ async function main() {
   excel.validate(request);
   const report = await excel.exportWorkbooks(request);
   const workbook = report.workbooks[0];
-  if (workbook.error || workbook.rows !== 10 || workbook.sheetsCompleted !== 1) {
+  if (workbook.error || workbook.rows !== orders.length || workbook.sheetsCompleted !== 1) {
     throw new Error(`Export did not complete: ${JSON.stringify(report)}`);
   }
-  console.log(`Created ${output}: 10 orders in Excel table SalesOrders (A1:H11).`);
-  console.log(`Total sales: USD ${(orders.reduce((sum, order) => sum + Math.round(order.total * 100), 0) / 100).toFixed(2)}`);
+  console.log(`Created ${output} with ${orders.length} orders in SalesOrders.`);
+  console.log(`Total sales: USD ${totalSales.toFixed(2)}`);
 }
 
 main().catch(error => { console.error(error); process.exitCode = 1; });

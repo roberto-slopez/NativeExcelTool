@@ -1288,6 +1288,7 @@
         },
         {
           "additionalProperties": false,
+          "description": "Database query configuration, including credentials supplied by the caller.\n\nThis type deliberately omits `Debug` to avoid exposing connection strings.",
           "properties": {
             "connectionString": {
               "type": "string"

@@ -1,3 +1,13 @@
+<#
+.SYNOPSIS
+Packages an existing Windows x64 alpha release build and verified workbook examples.
+.DESCRIPTION
+Requires dist/release/manifest.json with an alpha version and both generated
+workbooks under output/. Writes a distribution ZIP and SHA-256 file under
+dist/packages/. This script does not compile binaries or publish a GitHub release.
+.EXAMPLE
+./scripts/package-alpha.ps1
+#>
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 $manifest = Get-Content -LiteralPath (Join-Path $root 'dist/release/manifest.json') -Raw | ConvertFrom-Json

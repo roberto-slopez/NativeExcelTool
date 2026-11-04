@@ -8,7 +8,10 @@ use tokio::{
 };
 use tokio_util::compat::TokioAsyncWriteCompatExt;
 
-/// Owns a query producer. Dropping it aborts the producer and closes its connection.
+/// Owns a database query producer and its bounded row receiver.
+///
+/// Dropping the session requests task abortion. The connection is released when
+/// the producer future is dropped; dropping the session does not await cleanup.
 pub struct QuerySession {
     schema: Vec<String>,
     rx: mpsc::Receiver<Result<Row>>,
@@ -34,7 +37,10 @@ impl Drop for QuerySession {
     }
 }
 pub struct QueryService;
-/// Adapter port. Implementations own driver connections inside this future.
+/// Produces owned rows from a database connection through a bounded channel.
+///
+/// Implementations send the result schema before any rows and retain ownership
+/// of driver connections and borrowed database streams inside the producer future.
 pub trait QueryDriver: Send + Sync {
     fn produce<'a>(
         &'a self,

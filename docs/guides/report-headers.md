@@ -105,8 +105,6 @@ Automatic header merges are horizontal and rendered row by row, so they work in 
 
 ```powershell
 cargo run -p native-excel --bin native-excel -- examples/configs/report-header.json
-node examples/node/export.cjs examples/configs/report-header.json
-dotnet run --project examples/dotnet -- debug examples/configs/report-header.json
 ```
 
-Build native packages first with `cargo xtask build-all`. The same JSON works through C ABI/PInvoke without new native function signatures. The generated schema and TypeScript `ReportHeader`/`HeaderField` types expose these parameters.
+For the full sales report in both languages, build with `cargo xtask build-all` and run `./scripts/run-examples.ps1 -Profile debug`. Each example builds the header from the orders in its own source file. The six summary fields fit into three logical blocks and leave a blank row before the table at `A7:H17`. The same JSON contract is available through the C ABI, and the TypeScript `ReportHeader` and `HeaderField` types describe its parameters.

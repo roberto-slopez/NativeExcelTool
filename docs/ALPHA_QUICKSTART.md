@@ -1,6 +1,6 @@
-# NativeExcelTool 0.1.0-alpha.1 - Windows x64
+# NativeExcelTool alpha quickstart for Windows x64
 
-This alpha contains optimized native binaries and two runnable sales-report examples. Each example constructs 10 orders directly in its own language and writes an Excel structured table named `SalesOrders`, including filter buttons, 8 columns, typed dates, USD amounts, boolean payment flags, and a frozen header row. The table occupies `A1:H11`; total sales are **USD 1831.28**. The data is fictional and requires no database or credentials.
+This bundle contains optimized native binaries and two runnable sales reports. Each example constructs 10 fictional orders and calculates the period, total sales, unpaid balance, order count, and paid order count. The merged title and summary sit above a filterable Excel table at `A7:H17`. Total sales are **USD 1831.28**, with **USD 776.90** unpaid.
 
 ## Open the results immediately
 
@@ -16,13 +16,14 @@ From the extracted folder in PowerShell:
 ./scripts/run-examples.ps1
 ```
 
-The script generates and checks `output/orders-node.xlsx` and `output/orders-dotnet.xlsx`. It reads their XLSX contents to verify all 10 records, table boundaries, typed cells, line totals, and identical data across both languages. Close an existing output workbook in Excel before rerunning.
+The script generates and checks `output/orders-node.xlsx` and `output/orders-dotnet.xlsx`. It verifies the report header, frozen rows, table boundaries, typed cells, and matching values across both languages. Close an existing output workbook in Excel before rerunning.
 
 ## Node.js only
 
 ```powershell
 $env:NATIVE_EXCEL_PROFILE = 'release'
 node examples/node/export.cjs
+node examples/node/export.cjs --table-only
 # Optional destination:
 node examples/node/export.cjs output/my-node-report.xlsx
 ```
@@ -33,6 +34,7 @@ Edit the `orders` array in `examples/node/export.cjs` to use your own data. The 
 
 ```powershell
 dotnet run --project examples/dotnet --configuration Release
+dotnet run --project examples/dotnet --configuration Release -- --table-only
 # Optional destination:
 dotnet run --project examples/dotnet --configuration Release -- output/my-dotnet-report.xlsx
 ```

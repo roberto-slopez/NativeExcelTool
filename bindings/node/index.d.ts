@@ -1,4 +1,8 @@
-/** Exact types for the request are also available in export-request.schema.json. */
+/**
+ * Public request and response types for the Node.js wrapper.
+ * The generated export-request.schema.json describes the serialized JSON contract.
+ * The wrapper additionally accepts bigint values and encodes them as tagged integers.
+ */
 export type BorderStyle = 'thin'|'medium'|'thick'|'double'|'dashed'|'dotted';
 export type FillPattern = 'solid'|'none'|'gray125'|'gray0625'|'lightGray'|'mediumGray'|'darkGray';
 export type Style = { fontName?: string; fontSize?: number; bold?: boolean; italic?: boolean; underline?: boolean; strikeout?: boolean; fontColor?: string; background?: string; foregroundColor?: string; fillPattern?: FillPattern; border?: BorderStyle; borderColor?: string; borderLeft?: BorderStyle; borderLeftColor?: string; borderRight?: BorderStyle; borderRightColor?: string; borderTop?: BorderStyle; borderTopColor?: string; borderBottom?: BorderStyle; borderBottomColor?: string; borderDiagonal?: BorderStyle; borderDiagonalColor?: string; horizontal?: 'left'|'center'|'right'; vertical?: 'top'|'center'|'bottom'; wrap?: boolean; shrinkToFit?: boolean; indent?: number; rotation?: number; numberFormat?: string; locked?: boolean; hidden?: boolean; resetFields?: string[] };

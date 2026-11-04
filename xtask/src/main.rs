@@ -158,11 +158,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
     std::fs::create_dir_all(dist.join("licenses"))?;
     let tracked_license = root.join("licenses/msexcel-builder.LICENSE");
-    let oldexcel_license = root.join("oldexcel/LICENSE");
+    let reference_license = root.join("msexcel-builder/LICENSE");
     let license_source = if tracked_license.exists() {
         tracked_license
-    } else if oldexcel_license.exists() {
-        oldexcel_license
+    } else if reference_license.exists() {
+        reference_license
     } else {
         return Err(
             "Missing msexcel-builder license file in licenses/msexcel-builder.LICENSE".into(),

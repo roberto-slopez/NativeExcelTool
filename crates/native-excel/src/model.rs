@@ -406,6 +406,9 @@ pub enum Source {
     #[serde(rename_all = "camelCase")]
     RowStream { input_id: String },
 }
+/// Database query configuration, including credentials supplied by the caller.
+///
+/// This type deliberately omits `Debug` to avoid exposing connection strings.
 #[derive(Clone, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct QueryRequest {
@@ -417,7 +420,6 @@ pub struct QueryRequest {
     #[serde(default)]
     pub options: QueryOptions,
 }
-// Credentials deliberately do not implement Debug.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "lowercase")]
 pub enum Dbms {

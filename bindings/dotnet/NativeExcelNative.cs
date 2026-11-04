@@ -8,7 +8,15 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Win32.SafeHandles;
 
-/// <summary>Native C ABI imports and SafeHandle lifetime helpers. Match the process architecture to the Rust DLL.</summary>
+/// <summary>
+/// Provides C ABI imports and managed lifetime helpers for the native Excel engine.
+/// </summary>
+/// <remarks>
+/// The process architecture must match the native DLL. Raw imports return zero on
+/// success and an owned JSON buffer on success or failure. Pass each buffer to
+/// <see cref="Read"/> or release it exactly once with <see cref="ne_buffer_free"/>.
+/// Raw query reads, event polling, input writes, and job result calls can block.
+/// </remarks>
 public static class NativeExcelNative
 {
     private const string Library = "native_excel_ffi";
@@ -36,6 +44,7 @@ public static class NativeExcelNative
     [DllImport(Library, CallingConvention = CallingConvention.Cdecl)] public static extern int ne_input_finish(ulong id, out Buffer result);
     [DllImport(Library, CallingConvention = CallingConvention.Cdecl)] public static extern int ne_input_release(ulong id, out Buffer result);
 
+    /// <summary>Releases a native job handle and requests cancellation when disposed.</summary>
     public sealed class SafeJobHandle : SafeHandleZeroOrMinusOneIsInvalid
     {
         public SafeJobHandle(ulong id) : base(true) => SetHandle((IntPtr)id);
@@ -48,6 +57,7 @@ public static class NativeExcelNative
         }
     }
 
+    /// <summary>Releases a native query handle and requests producer cancellation when disposed.</summary>
     public sealed class SafeQueryHandle : SafeHandleZeroOrMinusOneIsInvalid
     {
         public SafeQueryHandle(ulong id) : base(true) => SetHandle((IntPtr)id);
@@ -60,6 +70,8 @@ public static class NativeExcelNative
         }
     }
 
+    /// <summary>Owns an incremental input handle and releases it when disposed.</summary>
+    /// <remarks>Disposing an unfinished input stream requests cancellation of its consumer.</remarks>
     public sealed class SafeInputHandle : SafeHandleZeroOrMinusOneIsInvalid
     {
         public string InputId { get; }
@@ -88,6 +100,11 @@ public static class NativeExcelNative
         }
     }
 
+    /// <summary>Decodes a native JSON response and releases its buffer in all cases.</summary>
+    /// <param name="status">The status returned by the native operation.</param>
+    /// <param name="buffer">An unreleased buffer returned by this native library.</param>
+    /// <returns>A JSON value that remains valid after the native buffer is released.</returns>
+    /// <exception cref="InvalidOperationException">The native operation returned an error.</exception>
     public static JsonElement Read(int status, Buffer buffer)
     {
         try
@@ -103,12 +120,15 @@ public static class NativeExcelNative
         }
     }
 
+    /// <summary>Returns the export features supported by the loaded native library.</summary>
     public static JsonElement Capabilities()
     {
         var status = ne_capabilities_json(out var buffer);
         return Read(status, buffer);
     }
 
+    /// <summary>Validates an export request without starting an export.</summary>
+    /// <param name="json">The serialized export request.</param>
     public static void Validate(string json)
     {
         var bytes = Encoding.UTF8.GetBytes(json);
@@ -116,6 +136,9 @@ public static class NativeExcelNative
         Read(status, buffer);
     }
 
+    /// <summary>Creates a bounded input stream for caller-provided records.</summary>
+    /// <param name="optionsJson">Serialized input limits, or an empty JSON object for defaults.</param>
+    /// <returns>An input handle that the caller must dispose.</returns>
     public static SafeInputHandle OpenInput(string optionsJson = "{}")
     {
         var bytes = Encoding.UTF8.GetBytes(optionsJson);
@@ -124,6 +147,9 @@ public static class NativeExcelNative
         return new SafeInputHandle(info.GetProperty("handle").GetUInt64(), info.GetProperty("inputId").GetString()!);
     }
 
+    /// <summary>Exports workbooks and blocks until the native job completes.</summary>
+    /// <param name="json">The serialized export request.</param>
+    /// <returns>The completed export report.</returns>
     public static JsonElement Export(string json)
     {
         var bytes = Encoding.UTF8.GetBytes(json);
@@ -133,6 +159,10 @@ public static class NativeExcelNative
         return Read(status, buffer);
     }
 
+    /// <summary>Waits for a native export on a managed worker thread.</summary>
+    /// <param name="json">The serialized export request.</param>
+    /// <param name="cancellationToken">Requests cooperative cancellation of the native job.</param>
+    /// <returns>A task containing the completed native export report.</returns>
     public static Task<JsonElement> ExportAsync(string json, CancellationToken cancellationToken = default)
     {
         return Task.Run(() =>
@@ -150,6 +180,11 @@ public static class NativeExcelNative
         }, cancellationToken);
     }
 
+    /// <summary>Reads native query rows asynchronously and releases the query on disposal.</summary>
+    /// <param name="queryJson">The serialized query configuration.</param>
+    /// <param name="cancellationToken">Requests cancellation of the native query producer.</param>
+    /// <returns>A sequence of decoded query rows.</returns>
+    /// <remarks>Opening the native query occurs synchronously before the first row is awaited.</remarks>
     public static async IAsyncEnumerable<JsonElement> QueryStreamAsync(
         string queryJson,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)

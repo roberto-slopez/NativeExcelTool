@@ -1,4 +1,7 @@
-//! Column-aware conversion. Uniform styles live in column metadata, while rule/cell overrides pass an explicit format.
+//! Column-aware cell conversion and formatting.
+//!
+//! Uniform styles are stored in column metadata. Rules and cell overrides pass
+//! explicit formats when writing individual cells.
 use crate::{
     BinaryEncoding, Column, ColumnTransform, DataType, ExportError, PrecisionPolicy, Result,
 };

@@ -1,4 +1,4 @@
-//! Plan horizontal merges and render header rows in order, including in streaming mode.
+//! Header layout planning and ordered rendering for buffered and streaming worksheets.
 use crate::*;
 use rust_xlsxwriter::Worksheet;
 use serde_json::Value;

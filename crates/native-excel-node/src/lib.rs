@@ -111,7 +111,7 @@ pub struct QueryStream {
     schema: String,
     cancel: tokio::task::AbortHandle,
 }
-// Tokio is re-exported by napi for native async execution.
+// Use the synchronization types exposed by napi's Tokio re-export.
 mod tokio_mutex {
     pub use napi::tokio::sync::Mutex;
 }
